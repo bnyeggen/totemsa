@@ -1,0 +1,9 @@
+History:
+Started based on the SICP symbolic differentiation chapter, with some extensions.
+Brought into Incanter, additions made by David Edgar Liebke.
+Now, split back into its own project to support a more rapid development cycle,
+the addition of unit tests & generative testing, expression simplification, etc.
+
+Licensed under the EPL, see "epl-v10.html"
+
+Copyright 2012 Bryce Nyeggen and David Edgar Liebke
