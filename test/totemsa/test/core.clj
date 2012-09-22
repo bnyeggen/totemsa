@@ -38,4 +38,8 @@
         (fn [x y] (* y y x 2))))
   (is (generative-test-deriv-fn 
         (deriv-fn [x y] (* (* x y) (+ x 3)) x) 
-        (fn [x y] (+ (* (+ x 3) y) (* x y))))))
+        (fn [x y] (+ (* (+ x 3) y) (* x y)))))
+  ;FAILS, need to properly apply chain rule
+  (is (generative-test-deriv-fn
+        (deriv-fn [x] (pow x x) x)
+        (fn [x] (* (inc (log x)) (pow x x))))))
