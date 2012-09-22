@@ -8,8 +8,8 @@
    manually computed derivative's."
   [deriv-fn correct-fn]
   (let [check-times 1000
-        ubound 100.0
-        lbound -100.0
+        ubound 10.0
+        lbound -10.0
         tolerance 0.001
         domain-range (- ubound lbound)
         nargs (-> correct-fn class .getDeclaredMethods first .getParameterTypes alength)]
@@ -39,6 +39,9 @@
   (is (generative-test-deriv-fn 
         (deriv-fn [x y] (* (* x y) (+ x 3)) x) 
         (fn [x y] (+ (* (+ x 3) y) (* x y)))))
+  (is (generative-test-deriv-fn
+        (deriv-fn [x] (exp (* x x)) x)
+        (fn [x] (* (+ x x) (exp (* x x))))))
   ;FAILS, need to properly apply chain rule
   (is (generative-test-deriv-fn
         (deriv-fn [x] (pow x x) x)
