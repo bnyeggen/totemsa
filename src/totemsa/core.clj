@@ -43,7 +43,7 @@
 (defn- quotient? [x] (and (>= (count x) 3) (= (first x) '/)))
 
 (defn- conv-qtnt [x] "Convert a quotient to a product of a base with an inverse"
-  (list '* (second x) (list 'pow (list* '*  1 (nthnext x 1))) -1))
+  (list '* (second x) (list 'pow (list* '*  1 (nthnext x 1)) -1)))
 
 ;exp can also kind of be chainrulized below, it makes sense not to though since
 ;it takes 2 args, not one.  log base whatever is same situation
@@ -91,7 +91,7 @@
 
     (deriv* '(+ x 3) 'x)
     (deriv* '(* x y) 'x)
-    (deriv* '(* (* x y) '(+ x 3)) x)
+    (deriv* '(* (* x y) '(+ x 3)) 'x)
     (deriv* '(* (* x y) (+ x 3)) 'y)
 
     (deriv* '(* x y (+ x 3)) 'x)
@@ -106,43 +106,43 @@
       (number? exp) 0
       (same-var? exp v) 1
       (and (same-var? exp) (not= exp v)) 0
-      (sum? exp) (make-sum (deriv* (second exp) v) (deriv* (reduce-expr exp '+) v))
-      (difference? exp) (make-sum (deriv* (second exp) v)
-                          (deriv* (make-prod -1 (reduce-expr exp '+)) v))
+      (sum? exp) (make-sum (totemsa.core/deriv* (second exp) v) (totemsa.core/deriv* (reduce-expr exp '+) v))
+      (difference? exp) (make-sum (totemsa.core/deriv* (second exp) v)
+                          (totemsa.core/deriv* (make-prod -1 (reduce-expr exp '+)) v))
       (product? exp)
       (make-sum
         (make-prod (second exp)
-          (deriv* (reduce-expr exp '*) v))
-        (make-prod (deriv* (second exp) v)
+          (totemsa.core/deriv* (reduce-expr exp '*) v))
+        (make-prod (totemsa.core/deriv* (second exp) v)
           (reduce-expr exp '*)))
-      (quotient? exp) (deriv* (conv-qtnt exp) v)
+      (quotient? exp) (totemsa.core/deriv* (conv-qtnt exp) v)
       (expnt? exp)
       (let [u (second exp)
             n (expnt exp)]
         (make-prod (make-prod
                      (expnt exp)
                      (make-expnt (second exp) (make-sum (expnt exp) -1)))
-          (deriv* (second exp) v)))
+          (totemsa.core/deriv* (second exp) v)))
       (chainable? exp)
       (let [u (first exp)
             n (second exp)]
         (cond
           (number? n) 0;things could be out-of-bounds a la log(0), but that's philosophical
-          (= 'sin u) (make-prod (list 'cos n) (deriv* n v))
-          (= 'cos u) (make-prod (list '* -1 (list 'sin n)) (deriv* n v))
-          (= 'tan u) (make-prod (list 'pow (list 'cos n) -2) (deriv* n v))
+          (= 'sin u) (make-prod (list 'cos n) (totemsa.core/deriv* n v))
+          (= 'cos u) (make-prod (list '* -1 (list 'sin n)) (totemsa.core/deriv* n v))
+          (= 'tan u) (make-prod (list 'pow (list 'cos n) -2) (totemsa.core/deriv* n v))
           ;multiply by inverse of denominator is same as numerator/denominator
-          (= 'log u) (make-prod (deriv* n v) (list 'pow n -1))
-          (= 'exp u) (make-prod (list 'exp n) (deriv* n v))
+          (= 'log u) (make-prod (totemsa.core/deriv* n v) (list 'pow n -1))
+          (= 'exp u) (make-prod (list 'exp n) (totemsa.core/deriv* n v))
           true false));should not happen as chainable? refers to a list that
       ;we should completely specify here
-      true (list 'deriv* exp v);some kind of error here, return a description of
+      true (list 'totemsa.core/deriv* exp v);some kind of error here, return a description of
       ;"the derivative of this function" rather than the actual result
       ))
   ([exp vr degree]
     (loop [x exp v vr dgr degree]
       (if (zero? dgr) x
-        (recur (deriv* x v) v (dec dgr) )))))
+        (recur (totemsa.core/deriv* x v) v (dec dgr) )))))
 
 
 (defmacro deriv
@@ -175,9 +175,9 @@
     (deriv (+ (* 3 x) (* 8 x)) x) ; => 11
 "
   ([exp v]
-     `(deriv* '~exp '~v))
+     `(totemsa.core/deriv* '~exp '~v))
   ([exp v degree]
-     `(deriv* '~exp '~v ~degree)))
+     `(totemsa.core/deriv* '~exp '~v ~degree)))
 
 (defn- tree-subst
 "
@@ -239,16 +239,16 @@
      (deriv-fn* args expr v 1))
   ([[& args] expr v degree]
      (let [ops {'+ clojure.core/+
-		'- clojure.core/-
-		'* clojure.core/*
-		'/ clojure.core//
-		'sin totemsa.core/sin
-		'cos totemsa.core/cos
-		'tan totemsa.core/tan
-		'pow totemsa.core/pow
-		'exp totemsa.core/exp}] 
-       (eval (tree-subst (list 'fn (apply vector args) (deriv* expr v degree))
-			 (apply assoc ops (interleave args (map gensym args))))))))
+                '- clojure.core/-
+                '* clojure.core/*
+                '/ clojure.core//
+                'sin totemsa.core/sin
+                'cos totemsa.core/cos
+                'tan totemsa.core/tan
+                'pow totemsa.core/pow
+                'exp totemsa.core/exp}] 
+       (eval (tree-subst (list 'fn (apply vector args) (totemsa.core/deriv* expr v degree))
+                         (apply assoc ops (interleave args (map gensym args))))))))
 
 
 (defmacro deriv-fn
@@ -257,6 +257,6 @@
 
     ((deriv-fn [x y] (+ (* x y) x) x) 5 9)"
 ([[& args] expr v]
-   `(deriv-fn* '[~@args] '~expr '~v 1))
+   `(totemsa.core/deriv-fn* '[~@args] '~expr '~v 1))
 ([[& args] expr v degree]
-   `(deriv-fn* '[~@args] '~expr '~v ~degree)))
+   `(totemsa.core/deriv-fn* '[~@args] '~expr '~v ~degree)))
