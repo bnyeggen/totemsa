@@ -1,0 +1,33 @@
+(ns totemsa.test.core
+  (:use [clojure.test]
+        [totemsa.core]))
+
+(defn generative-test-deriv-fn
+  "Generate 1000 random doubles [-100,100] and verify that the computed
+   derivative's evaluation at those points are within 1/1000th of the
+   manually computed derivative's."
+  [correct-fn deriv-fn]
+  (let [check-times 1000
+        ubound 100.0
+        lbound -100.0
+        tolerance 0.001
+        domain-range (- ubound lbound)]
+    (->> (repeatedly check-times #(- (/ domain-range 2.0) (rand domain-range)))
+      (map #(/ (correct-fn %) (deriv-fn %)))
+      (every? #(> (+ 1.0 tolerance) % (- 1.0 tolerance))))))
+
+(deftest test-deriv*
+  (is (= (totemsa.core/deriv* '(+ x 3) 'x) 1))
+  (is (= (totemsa.core/deriv* '(* x 3) 'x) 3))
+  (is (= (totemsa.core/deriv* '(* x y) 'x) 'y)))
+
+(deftest test-deriv-fn
+  (is (generative-test-deriv-fn
+        (deriv-fn [x] (/ 1 x) x)
+        (fn [x] (* -1 (pow x -2.0)))))
+  (is (generative-test-deriv-fn
+        (deriv-fn [x] (* x x x) x)
+        (fn [x] (* 3 (* x x)))))
+  (is (generative-test-deriv-fn
+        (deriv-fn [x] (sin (* x x)) x)
+        (fn [x] (* 2 x (cos (* x x)))))))
