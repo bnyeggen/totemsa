@@ -1,3 +1,4 @@
 .project
 .lein-deps-sum
 .classpath
+.settings/
