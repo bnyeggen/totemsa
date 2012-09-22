@@ -89,8 +89,6 @@
 
   Examples:
 
-    (use '(incanter core symbolic))
-
     (deriv* '(+ x 3) 'x)
     (deriv* '(* x y) 'x)
     (deriv* '(* (* x y) '(+ x 3)) x)
@@ -101,7 +99,6 @@
 
     (deriv* '(* x y (+ x 3)) 'x 2)
     (deriv* '(* x y (+ x 3)) 'x 3)
-
 
 "
   ([exp v]
@@ -155,8 +152,6 @@
 
   Examples:
 
-    (use '(incanter core symbolic))
-
     (deriv (+ x 3) x) ; => 1
     (deriv (* x y) x) ; => y
     (deriv (* (* x y) (+ x 3)) x) ; => (+ (* (+ x 3) y) (* x y))
@@ -194,11 +189,11 @@
 		'- clojure.core/-
 		'* clojure.core/*
 		'/ clojure.core//
-		'sin incanter.core/sin
-		'cos incanter.core/cos
-		'tan incanter.core/tan
-		'pow incanter.core/pow
-		'exp incanter.core/exp
+		'sin totemsa.core/sin
+		'cos totemsa.core/cos
+		'tan totemsa.core/tan
+		'pow totemsa.core/pow
+		'exp totemsa.core/exp
                 'fn clojure.core/fn})
 
     (tree-subst '(+ (* x y) x) {'x 3, 'y 9, '* 'clojure.core/*, '+ 'clojure.core/+})
@@ -235,10 +230,7 @@
 
 (defn deriv-fn*
 "
-
   Examples:
-    (use '(incanter core symbolic))
-
     (deriv-fn* '[x y] '(+ (* x y) x) 'x)
 
     ((deriv-fn* '[x y] '(+ (* x y) x) 'x) 5 9)
@@ -261,30 +253,9 @@
 
 (defmacro deriv-fn
 "  Examples:
-    (use '(incanter core symbolic))
-
     (deriv-fn [x y] (+ (* x y) x) x)
 
-    ((deriv-fn [x y] (+ (* x y) x) x) 5 9)
-
-    (use 'incanter.charts)
-    (doto (function-plot sin -5 5)
-       (add-function (deriv-fn [x] (sin x) x) -5 5)
-       (add-function (deriv-fn [x] (sin x) x 2) -5 5)
-       view)
-
-    (let [f (fn [x] (pow x 2))
-          df (deriv-fn [x] (pow x 2) x)]
-      (doto (function-plot f -5 5)
-        (add-function df -5 5)
-        view))
-
-
-    (let [f (fn [x] (pow x 3))
-          df (deriv-fn [x] (pow x 3) x)]
-      (doto (function-plot f -5 5)
-        (add-function df -5 5)
-        view))"
+    ((deriv-fn [x y] (+ (* x y) x) x) 5 9)"
 ([[& args] expr v]
    `(deriv-fn* '[~@args] '~expr '~v 1))
 ([[& args] expr v degree]
