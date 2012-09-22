@@ -180,10 +180,7 @@
      `(totemsa.core/deriv* '~exp '~v ~degree)))
 
 (defn- tree-subst
-"
-
-  Examples:
-    (use '(incanter core symbolic))
+" Examples:
 
     (def ops {'+ clojure.core/+
 		'- clojure.core/-
