@@ -18,12 +18,26 @@
       (map #(/ (apply correct-fn %) (apply deriv-fn %)))
       (every? #(> (+ 1.0 tolerance) % (- 1.0 tolerance))))))
 
+(defn oneoff-deriv-fn-test
+  "Equivalent to above, but for REPL usage."
+  [deriv-fn correct-fn]
+  (let [ubound 10.0
+        lbound -10.0
+        tolerance 0.001
+        domain-range (- ubound lbound)
+        nargs (-> correct-fn class .getDeclaredMethods first .getParameterTypes alength)
+        rns (repeatedly nargs #(- (/ domain-range 2.0) (rand domain-range)))]
+    [rns
+     (apply deriv-fn rns) (apply correct-fn rns) 
+     (/ (apply correct-fn rns) (apply deriv-fn rns))]))
+
 (deftest test-deriv*
   (is (= (totemsa.core/deriv* '(+ x 3) 'x) 1))
   (is (= (totemsa.core/deriv* '(* x 3) 'x) 3))
   (is (= (totemsa.core/deriv* '(* x y) 'x) 'y)))
 
 (deftest test-deriv-fn
+  ;FAILs due to negative logarithm
   (is (generative-test-deriv-fn
         (deriv-fn [x] (/ 1 x) x)
         (fn [x] (* -1 (pow x -2.0)))))
@@ -42,7 +56,10 @@
   (is (generative-test-deriv-fn
         (deriv-fn [x] (exp (* x x)) x)
         (fn [x] (* (+ x x) (exp (* x x))))))
-  ;FAILS, need to properly apply chain rule
+  ;FAILs due to negative logarithm
   (is (generative-test-deriv-fn
         (deriv-fn [x] (pow x x) x)
-        (fn [x] (* (inc (log x)) (pow x x))))))
+        (fn [x] (* (inc (log x)) (pow x x)))))
+  (is (generative-test-deriv-fn
+        (deriv-fn [x] (pow Math/E x) x)
+        (fn [x] (pow Math/E x)))))
